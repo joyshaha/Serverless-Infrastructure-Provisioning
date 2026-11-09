@@ -1,0 +1,46 @@
+name: docker-build-ci
+run-name: ${{ github.actor }} is learning GitHub Actions
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: build-docker-image
+    steps:
+      - uses: actions/checkout@v4
+      - name: install make package
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make
+      
+      - name: build docker image
+        shell: bash
+        run: |
+          cd nginx_app
+          make docker_build
+
+      - name: push build dockerhub 
+        shell: bash
+        run: |
+          cd nginx_app
+          # make docker_login DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}
+          make docker_login
+          make docker_push
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+      # - name: build and push docker image
+      #   run: make all
+      #   env:
+      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      #     TAG: ${GITHUB_RUN_ID}

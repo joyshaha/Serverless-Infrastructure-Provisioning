@@ -1,0 +1,52 @@
+name: Deploy to dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build_and_package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.14
+
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y zip
+          pip install -r requirements.txt -t .
+          pip install --upgrade pydantic==2.7.4 --platform manylinux2014_x86_64 --only-binary=:all: -t .
+          zip -r code.zip . -x .gitignore bitbucket-pipelines.yml \*.git\*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: code
+          path: code.zip
+
+  update_lambda_code:
+    needs: build_and_package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: code
+
+      - name: Deploy to Lambda - Dev
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME_DEV }} \
+            --zip-file fileb://code.zip
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY_ID }}
+          AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}

@@ -1,0 +1,52 @@
+// {
+//     "name": "Nginx Learning",
+
+//     "build": {
+//         "dockerfile": "Dockerfile",
+//         "context": ".."
+//     },
+
+//     "workspaceFolder": "/workspace",
+
+//     "forwardPorts": [
+//         80
+//     ]
+// }
+
+{
+    "name": "Ubuntu + Terraform + AWS CLI",
+
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+
+    "remoteUser": "root",
+
+    "workspaceFolder": "/workspace",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "hashicorp.terraform",
+                // "amazonwebservices.aws-toolkit-vscode",
+                // "ms-azuretools.vscode-docker",
+                "GitHub.vscode-github-actions",
+                // "eamodio.gitlens"
+            ],
+            "settings": {
+                "editor.formatOnSave": true,
+                "terraform.languageServer.enabled": true
+            }
+        }
+    },
+
+    "postCreateCommand": "terraform version && aws --version",
+
+    "mounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind"
+    ]
+    // "runArgs": [
+    //     "--platform=linux/amd64"
+    // ]
+}
